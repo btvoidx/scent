@@ -2,8 +2,7 @@ package scent
 
 import (
 	"fmt"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"sync"
 )
 
 var (
@@ -13,22 +12,25 @@ var (
 	ErrNotLoaded     = fmt.Errorf("%w: was not loaded", ErrUnloadFailed)
 )
 
-type Scene[G any] interface {
-	Load(G) (unload func() error, err error)
-	Update() error
-	Draw(*ebiten.Image)
+type Scene[L, U, D any] interface {
+	Load(L) (unload func() error, err error)
+	Update(U) error
+	Draw(D)
 }
 
-type Switch[G any] struct {
-	stack []Scene[G]
+type Switch[L, U, D any] struct {
+	stack []loaded[L, U, D]
+	mu    sync.Mutex
 }
 
 // Updates all scenes top-to-bottom
-func (Switch[G]) Update() error
+func (s *Switch[L, U, D]) Update(v U) error {
+}
 
 // Draws all scenes bottom-to-top
-func (Switch[G]) Draw(*ebiten.Image)
+func (s *Switch[L, U, D]) Draw(v D) {
+func (s *Switch[L, U, D]) LoadScene(v L, scene Scene[L, U, D]) error {
 
-func (Switch[G]) LoadScene(Scene[G]) error
 
-func (Switch[G]) UnloadScene(Scene[G]) error
+}
+}
