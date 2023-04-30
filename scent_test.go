@@ -16,8 +16,8 @@ type Scene struct {
 }
 
 func (s *Scene) Load(none) (func() error, error) {
-	if err := s.load(); err != nil {
-		return nil, err
+	if s.load != nil {
+		return s.unload, s.load()
 	}
 
 	return s.unload, nil
@@ -70,5 +70,35 @@ func TestLoad(t *testing.T) {
 		t.Fatalf("was not loaded")
 	case !unloaded:
 		t.Fatalf("was not unloaded")
+	}
+}
+
+func TestUpdateOrder(t *testing.T) {
+	s := new(scent.Switch[none, none, none])
+
+	var res int
+	s.LoadScene(none{}, &Scene{update: func() error { res *= res; return nil }})
+	s.LoadScene(none{}, &Scene{update: func() error { res *= 3; return nil }})
+	s.LoadScene(none{}, &Scene{update: func() error { res += 1; return nil }})
+
+	s.Update(none{})
+
+	if res != 9 {
+		t.Fatalf("wrong update order")
+	}
+}
+
+func TestDrawOrder(t *testing.T) {
+	s := new(scent.Switch[none, none, none])
+
+	var res int
+	s.LoadScene(none{}, &Scene{draw: func() { res += 1 }})
+	s.LoadScene(none{}, &Scene{draw: func() { res *= 3 }})
+	s.LoadScene(none{}, &Scene{draw: func() { res *= res }})
+
+	s.Draw(none{})
+
+	if res != 9 {
+		t.Fatalf("wrong draw order")
 	}
 }
